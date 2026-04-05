@@ -5,6 +5,26 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title='Iris Species Identifier', page_icon='🌸', layout='wide')
 
+st.markdown(
+    """
+    <style>
+      .css-18e3th9, .css-1d391kg, .main, .block-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+      .stApp, .reportview-container, .main {
+        background: #0f1c14 !important;
+      }
+      iframe {
+        width: 100% !important;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 @st.cache_data
 def load_model():
     with open('rf_model.json', 'r', encoding='utf-8') as f:
@@ -38,6 +58,7 @@ html_template = '''<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iris Species Identifier</title>
+<link rel="icon" href="iris-icon.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after {{ margin:0; padding:0; box-sizing:border-box; }}
