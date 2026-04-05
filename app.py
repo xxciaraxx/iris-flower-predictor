@@ -107,8 +107,9 @@ html_template = '''<!DOCTYPE html>
   .samples-label {{ font-size:0.6rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(247,241,232,0.2); flex-shrink:0; }}
   .pill {{ background:none; border:1px solid rgba(247,241,232,0.12); border-radius:20px; padding:0.28rem 0.85rem; font-size:0.7rem; font-style:italic; color:rgba(247,241,232,0.38); cursor:pointer; letter-spacing:0.04em; transition:all 0.2s; font-family:'Playfair Display', serif; }}
   .pill:hover {{ border-color:var(--gold); color:var(--gold-light); }}
-  .predict-btn {{ width:100%; max-width:560px; margin-top:1.2rem; padding:1rem; background:transparent; border:1px solid var(--gold); border-radius:4px; color:var(--gold-light); font-family:'DM Sans', sans-serif; font-size:0.78rem; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; cursor:pointer; }}
+  .predict-btn {{ width:100%; max-width:560px; margin-top:1.2rem; margin-bottom:2rem; padding:1rem; background:transparent; border:1px solid var(--gold); border-radius:4px; color:var(--gold-light); font-family:'DM Sans', sans-serif; font-size:0.78rem; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; cursor:pointer; }}
   .predict-btn:hover {{ color:var(--dark); background:rgba(200,169,110,0.08); }}
+  .dataset-card {{ background:rgba(10,20,13,0.82); border:1px solid rgba(200,169,110,0.15); border-radius:16px; padding:1.8rem; width:100%; max-width:1000px; margin-top:1rem; }}
   .result-panel {{ width:100%; max-width:560px; margin-top:1.4rem; display:none; animation:riseIn 0.45s cubic-bezier(0.22,0.61,0.36,1) both; }}
   @keyframes riseIn {{ from {{ opacity:0; transform:translateY(14px); }} to {{ opacity:1; transform:translateY(0); }} }}
   .result-inner {{ background:rgba(10,20,13,0.82); backdrop-filter:blur(24px); border:1px solid rgba(200,169,110,0.15); border-radius:6px; padding:1.8rem 2rem; position:relative; overflow:hidden; }}
@@ -206,9 +207,9 @@ html_template = '''<!DOCTYPE html>
   </div>
   <div class="bottom-bar">
     <span class="samples-label">Try</span>
-    <button class="pill" onclick="fillSample(5.1,3.5,1.4,0.2)">I. setosa</button>
-    <button class="pill" onclick="fillSample(6.0,2.9,4.5,1.5)">I. versicolor</button>
-    <button class="pill" onclick="fillSample(6.3,3.3,6.0,2.5)">I. virginica</button>
+    <button class="pill" onclick="fillSample(5.1,3.5,1.4,0.2)">setosa</button>
+    <button class="pill" onclick="fillSample(6.0,2.9,4.5,1.5)">versicolor</button>
+    <button class="pill" onclick="fillSample(6.3,3.3,6.0,2.5)">virginica</button>
   </div>
   <button class="predict-btn" onclick="identify()">Identify Species</button>
   <div class="result-panel" id="result-panel">
