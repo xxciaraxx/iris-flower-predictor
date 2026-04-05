@@ -77,9 +77,9 @@ html_template = '''<!DOCTYPE html>
   }}
   html, body {{ min-height:100%; }}
   body {{ font-family:'DM Sans', sans-serif; min-height:100vh; background:var(--dark); color:var(--cream); overflow-x:hidden; }}
-  .hero-bg {{ position:fixed; inset:0; z-index:0; background-image:url("data:image/jpeg;base64,{bg_image_data}"); background-size:cover; background-position:center 30%; filter:saturate(0.7) brightness(0.32); }}
+  .hero-bg {{ position:fixed; inset:0; z-index:0; background-image:url("data:image/jpeg;base64,{bg_image_data}"); background-size:cover; background-position:center 30%; filter:saturate(0.7) brightness(1); }}
   .hero-bg::after {{ content:''; position:absolute; inset:0; background:linear-gradient(160deg, rgba(15,28,20,0.5) 0%, rgba(15,28,20,0.9) 100%); }}
-  .page {{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:3rem 1.5rem 4rem; }}
+  .page {{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:3rem 1.5rem 1.5rem; }}
   header {{ text-align:center; margin-bottom:3rem; }}
   .eyebrow {{ font-size:0.75rem; letter-spacing:0.26em; text-transform:uppercase; color:var(--gold); display:inline-flex; align-items:center; gap:0.8rem; margin-bottom:0.9rem; }}
   .eyebrow::before, .eyebrow::after {{ content:''; width:34px; height:1px; background:var(--gold); opacity:0.45; }}
@@ -146,7 +146,7 @@ html_template = '''<!DOCTYPE html>
   .dataset-table th, .dataset-table td {{ padding:0.95rem 0.9rem; text-align:left; border-bottom:1px solid rgba(247,241,232,0.08); color:rgba(247,241,232,0.72); }}
   .dataset-table th {{ color:rgba(247,241,232,0.36); font-weight:500; letter-spacing:0.12em; text-transform:uppercase; font-size:0.72rem; }}
   .dataset-table tbody tr:hover {{ background:rgba(247,241,232,0.05); }}
-  footer {{ margin-top:3rem; text-align:center; font-size:0.65rem; color:rgba(247,241,232,0.18); letter-spacing:0.08em; }}
+  footer {{ margin-top:2rem; text-align:center; font-size:0.65rem; color:rgba(247,241,232,0.18); letter-spacing:0.08em; }}
   @media (max-width: 480px) {{ .steppers {{ grid-template-columns:1fr; }} }}
 </style>
 </head>
@@ -403,4 +403,4 @@ tabButtons.forEach(btn => {{
 
 html = html_template.format(model_json=json.dumps(model), dataset_rows=dataset_rows, bg_image_data=bg_image_data)
 
-components.html(html, height=1600, scrolling=True)
+components.html(html, height=1400, scrolling=True)
