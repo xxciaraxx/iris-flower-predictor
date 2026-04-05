@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import json
+import base64
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title='Iris Species Identifier', page_icon='🌸', layout='wide')
+st.set_page_config(page_title='Iris Species Identifier', page_icon='iris-icon.jpg', layout='wide')
 
 st.markdown(
     """
@@ -52,6 +53,9 @@ for index, row in dataset.iterrows():
 
 dataset_rows = ''.join(rows)
 
+with open('iris-bg2.jpg', 'rb') as f:
+    bg_image_data = base64.b64encode(f.read()).decode('utf-8')
+
 html_template = '''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,7 +77,8 @@ html_template = '''<!DOCTYPE html>
   }}
   html, body {{ min-height:100%; }}
   body {{ font-family:'DM Sans', sans-serif; min-height:100vh; background:var(--dark); color:var(--cream); overflow-x:hidden; }}
-  .hero-bg {{ position:fixed; inset:0; z-index:0; background:linear-gradient(160deg, rgba(15,28,20,0.95) 0%, rgba(15,28,20,0.62) 100%); }}
+  .hero-bg {{ position:fixed; inset:0; z-index:0; background-image:url("data:image/jpeg;base64,{bg_image_data}"); background-size:cover; background-position:center 30%; filter:saturate(0.7) brightness(0.32); }}
+  .hero-bg::after {{ content:''; position:absolute; inset:0; background:linear-gradient(160deg, rgba(15,28,20,0.5) 0%, rgba(15,28,20,0.9) 100%); }}
   .page {{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:3rem 1.5rem 4rem; }}
   header {{ text-align:center; margin-bottom:3rem; }}
   .eyebrow {{ font-size:0.75rem; letter-spacing:0.26em; text-transform:uppercase; color:var(--gold); display:inline-flex; align-items:center; gap:0.8rem; margin-bottom:0.9rem; }}
@@ -149,7 +154,7 @@ html_template = '''<!DOCTYPE html>
 <div class="hero-bg"></div>
 <div class="page">
   <header>
-    <div class="eyebrow">Botanical Classifier</div>
+    <div class="eyebrow">Iris Flower Predictor</div>
     <h1>Identify the <em>Iris</em></h1>
     <p class="subtitle">Random Forest · 100 Trees · 70/30 Split · 100% Test Accuracy</p>
   </header>
@@ -396,6 +401,6 @@ tabButtons.forEach(btn => {{
 </body>
 </html>'''
 
-html = html_template.format(model_json=json.dumps(model), dataset_rows=dataset_rows)
+html = html_template.format(model_json=json.dumps(model), dataset_rows=dataset_rows, bg_image_data=bg_image_data)
 
 components.html(html, height=1600, scrolling=True)
