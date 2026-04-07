@@ -158,63 +158,75 @@ def main():
         st.error("⚠️ iris_model.pkl not found. Make sure it's in the same folder as app.py.")
         st.stop()
     
-    # Initialize session state for persistent values
-    for val in ["sepal_length", "sepal_width", "petal_length", "petal_width"]:
-        if val not in st.session_state:
-            st.session_state[val] = [5.8, 3.0, 3.8, 1.2][["sepal_length", "sepal_width", "petal_length", "petal_width"].index(val)]
-    
+    # Initialize session state
+    if "sepal_length" not in st.session_state:
+        st.session_state.sepal_length = 5.8
+    if "sepal_width" not in st.session_state:
+        st.session_state.sepal_width = 3.0
+    if "petal_length" not in st.session_state:
+        st.session_state.petal_length = 3.8
+    if "petal_width" not in st.session_state:
+        st.session_state.petal_width = 1.2
     if "prediction" not in st.session_state:
         st.session_state.prediction = None
-        st.session_state.probabilities = None
     
-    # Create stepper grid with HTML
-    st.markdown('<div class="steppers">', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
+    # Stepper grid - pure HTML/CSS styling
+    st.markdown(f"""
+    <div class="steppers">
         <div class="stepper-cell sepal">
             <span class="stepper-label"><span class="part-pip"></span>Sepal Length</span>
+            <div style="text-align: center; width: 100%;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 400; color: #e8d5a8; line-height: 1; margin: 0.4rem 0;">{st.session_state.sepal_length:.1f}</div>
+                <div style="font-size: 0.6rem; color: rgba(247,241,232,0.2); letter-spacing: 0.1em;">centimetres</div>
+            </div>
         </div>
-        """, unsafe_allow_html=True)
-        val = st.slider("Sepal length", 4.0, 8.0, st.session_state.sepal_length, 0.1, label_visibility="collapsed", key="sl")
-        st.session_state.sepal_length = val
-        st.markdown(f'<div style="text-align: center; font-family: Playfair Display; font-size: 2.1rem; color: #e8d5a8;">{val:.1f}</div><div style="text-align: center; font-size: 0.6rem; color: rgba(247,241,232,0.2);">centimetres</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
         <div class="stepper-cell sepal">
             <span class="stepper-label"><span class="part-pip"></span>Sepal Width</span>
+            <div style="text-align: center; width: 100%;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 400; color: #e8d5a8; line-height: 1; margin: 0.4rem 0;">{st.session_state.sepal_width:.1f}</div>
+                <div style="font-size: 0.6rem; color: rgba(247,241,232,0.2); letter-spacing: 0.1em;">centimetres</div>
+            </div>
         </div>
-        """, unsafe_allow_html=True)
-        val = st.slider("Sepal width", 2.0, 4.5, st.session_state.sepal_width, 0.1, label_visibility="collapsed", key="sw")
-        st.session_state.sepal_width = val
-        st.markdown(f'<div style="text-align: center; font-family: Playfair Display; font-size: 2.1rem; color: #e8d5a8;">{val:.1f}</div><div style="text-align: center; font-size: 0.6rem; color: rgba(247,241,232,0.2);">centimetres</div>', unsafe_allow_html=True)
-    
-    col3, col4 = st.columns(2)
-    with col3:
-        st.markdown("""
         <div class="stepper-cell petal">
             <span class="stepper-label"><span class="part-pip"></span>Petal Length</span>
+            <div style="text-align: center; width: 100%;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 400; color: #e8d5a8; line-height: 1; margin: 0.4rem 0;">{st.session_state.petal_length:.1f}</div>
+                <div style="font-size: 0.6rem; color: rgba(247,241,232,0.2); letter-spacing: 0.1em;">centimetres</div>
+            </div>
         </div>
-        """, unsafe_allow_html=True)
-        val = st.slider("Petal length", 1.0, 7.0, st.session_state.petal_length, 0.1, label_visibility="collapsed", key="pl")
-        st.session_state.petal_length = val
-        st.markdown(f'<div style="text-align: center; font-family: Playfair Display; font-size: 2.1rem; color: #e8d5a8;">{val:.1f}</div><div style="text-align: center; font-size: 0.6rem; color: rgba(247,241,232,0.2);">centimetres</div>', unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown("""
         <div class="stepper-cell petal">
             <span class="stepper-label"><span class="part-pip"></span>Petal Width</span>
+            <div style="text-align: center; width: 100%;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 400; color: #e8d5a8; line-height: 1; margin: 0.4rem 0;">{st.session_state.petal_width:.1f}</div>
+                <div style="font-size: 0.6rem; color: rgba(247,241,232,0.2); letter-spacing: 0.1em;">centimetres</div>
+            </div>
         </div>
-        """, unsafe_allow_html=True)
-        val = st.slider("Petal width", 0.1, 2.5, st.session_state.petal_width, 0.1, label_visibility="collapsed", key="pw")
-        st.session_state.petal_width = val
-        st.markdown(f'<div style="text-align: center; font-family: Playfair Display; font-size: 2.1rem; color: #e8d5a8;">{val:.1f}</div><div style="text-align: center; font-size: 0.6rem; color: rgba(247,241,232,0.2);">centimetres</div>', unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Input controls in columns (hidden visually)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        sl = st.number_input("Sepal length", 4.0, 8.0, st.session_state.sepal_length, 0.1, label_visibility="collapsed", key="sl_input")
+        st.session_state.sepal_length = sl
+    with col2:
+        sw = st.number_input("Sepal width", 2.0, 4.5, st.session_state.sepal_width, 0.1, label_visibility="collapsed", key="sw_input")
+        st.session_state.sepal_width = sw
+    with col3:
+        pl = st.number_input("Petal length", 1.0, 7.0, st.session_state.petal_length, 0.1, label_visibility="collapsed", key="pl_input")
+        st.session_state.petal_length = pl
+    with col4:
+        pw = st.number_input("Petal width", 0.1, 2.5, st.session_state.petal_width, 0.1, label_visibility="collapsed", key="pw_input")
+        st.session_state.petal_width = pw
     
-    # Bottom bar with sample pills
+    # Hide the number inputs with CSS
+    st.markdown("""
+    <style>
+        [data-testid="stNumberInput"] { display: none !important; }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Bottom bar with samples
     st.markdown("""
     <div class="bottom-bar">
         <span class="samples-label">Try</span>
@@ -225,12 +237,14 @@ def main():
     """, unsafe_allow_html=True)
     
     # Predict button
-    if st.button("IDENTIFY SPECIES", use_container_width=True, key="predict", help="Predict the iris species"):
+    st.markdown('<div style="width: 100%; max-width: 560px; margin: 0 auto 1.4rem;">', unsafe_allow_html=True)
+    if st.button("IDENTIFY SPECIES", use_container_width=True, key="predict"):
         features = np.array([[st.session_state.sepal_length, st.session_state.sepal_width, st.session_state.petal_length, st.session_state.petal_width]])
         pred = model.predict(features)[0]
         probas = model.predict_proba(features)[0]
         st.session_state.prediction = pred
         st.session_state.probabilities = {cls: float(p) for cls, p in zip(model.classes_, probas)}
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Display results
     if st.session_state.prediction:
