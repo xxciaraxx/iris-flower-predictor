@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Iris Species Predictor",
-    page_icon="🌸",
+    page_icon="iris-icon.jpg",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -37,7 +37,6 @@ def img_to_base64(path: Path) -> str:
     return ""
 
 
-# ── Strip ALL Streamlit chrome so only our HTML shows ────────────────────────
 st.markdown(
     """
     <style>
@@ -365,9 +364,9 @@ html_page = f"""
 <div class="page">
 
   <header>
-    <div class="eyebrow">Botanical Classifier</div>
-    <h1>Identify the <em>Iris</em></h1>
-    <p class="subtitle">Random Forest · 100 Trees · 70/30 Split · Streamlit Edition</p>
+    <div class="eyebrow">Iris Species Predictor</div>
+    <h1>Identify the <em>Species</em></h1>
+    <p class="subtitle">Random Forest · 100 Trees · 70/30 Split</p>
   </header>
 
   <div class="steppers">
@@ -424,9 +423,9 @@ html_page = f"""
 
   <div class="bottom-bar">
     <span class="samples-label">Try</span>
-    <button class="pill" onclick="fillSample(5.1,3.5,1.4,0.2)">I. setosa</button>
-    <button class="pill" onclick="fillSample(6.0,2.9,4.5,1.5)">I. versicolor</button>
-    <button class="pill" onclick="fillSample(6.3,3.3,6.0,2.5)">I. virginica</button>
+    <button class="pill" onclick="fillSample(5.1,3.5,1.4,0.2)">setosa</button>
+    <button class="pill" onclick="fillSample(6.0,2.9,4.5,1.5)">versicolor</button>
+    <button class="pill" onclick="fillSample(6.3,3.3,6.0,2.5)">virginica</button>
   </div>
 
   <button class="predict-btn" id="predict-btn" onclick="predict()">Identify Species</button>
@@ -466,7 +465,7 @@ html_page = f"""
 
   <footer>
     Iris Dataset &nbsp;·&nbsp; scikit-learn RandomForestClassifier &nbsp;·&nbsp;
-    Model saved with joblib &nbsp;·&nbsp; Served by Streamlit
+    &nbsp;·&nbsp; Served by Streamlit
   </footer>
 </div>
 
