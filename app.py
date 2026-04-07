@@ -75,7 +75,7 @@ def run_prediction(sl, sw, pl, pw):
 
 
 params = st.query_params
-pred_result = None
+pred_result = st.session_state.get("pred_result")
 
 default_values = {
     "sl": 5.8,
@@ -97,6 +97,12 @@ current_sw = get_param_value("sw")
 current_pl = get_param_value("pl")
 current_pw = get_param_value("pw")
 
+if "current_sl" in st.session_state:
+    current_sl = st.session_state["current_sl"]
+    current_sw = st.session_state["current_sw"]
+    current_pl = st.session_state["current_pl"]
+    current_pw = st.session_state["current_pw"]
+
 if "predict" in params:
     try:
         sl = current_sl
@@ -104,6 +110,7 @@ if "predict" in params:
         pl = current_pl
         pw = current_pw
         pred_result = run_prediction(sl, sw, pl, pw)
+        st.session_state["pred_result"] = pred_result
     except Exception:
         pred_result = None
 
@@ -389,8 +396,6 @@ html_page = f"""
     <p class="subtitle">Random Forest · 100 Trees · 70/30 Split</p>
   </header>
 
-  <form id="predict-form" method="get" action="." target="_top">
-    <input type="hidden" name="predict" value="1">
   <div class="steppers">
 
     <div class="stepper-cell sepal">
@@ -450,8 +455,7 @@ html_page = f"""
     <button class="pill" onclick="fillSample(6.3,3.3,6.0,2.5)">virginica</button>
   </div>
 
-  <button type="submit" class="predict-btn" id="predict-btn" onclick="predict(event)">Identify Species</button>
-  </form>
+  <button type="button" class="predict-btn" id="predict-btn" onclick="predict()">Identify Species</button>
 
   <!-- Result panel (pre-populated if Python already ran a prediction) -->
   <div id="result-panel" class="result-panel" style="display:none;">
@@ -534,13 +538,22 @@ document.querySelectorAll('.step-btn').forEach(btn => {{
 }});
 
 // ── Predict: send values to Streamlit via Streamlit's postMessage ────────────
-function predict(event) {{
-  if (event) event.preventDefault();
+function predict() {{
   const btn = document.getElementById('predict-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Identifying…';
 
-  document.getElementById('predict-form').submit();
+  const sl = parseFloat(document.getElementById('val-sepal_length').value);
+  const sw = parseFloat(document.getElementById('val-sepal_width').value);
+  const pl = parseFloat(document.getElementById('val-petal_length').value);
+  const pw = parseFloat(document.getElementById('val-petal_width').value);
+  const requestId = Date.now().toString() + '-' + Math.random().toString(16).slice(2);
+
+  window.parent.postMessage({{
+    isStreamlitMessage: true,
+    type: 'streamlit:setComponentValue',
+    value: {{ action: 'predict', sl, sw, pl, pw, request_id: requestId }}
+  }}, '*');
 }}
 
 function fillSample(sl, sw, pl, pw) {{
@@ -594,4 +607,29 @@ function showResult(data) {{
 """
 
 # Render at full viewport height (scroll internally if needed)
-components.html(html_page, height=900, scrolling=True)
+component_value = components.html(html_page, height=900, scrolling=True)
+
+if (
+    isinstance(component_value, dict)
+    and component_value.get("action") == "predict"
+):
+    request_id = component_value.get("request_id")
+    if request_id != st.session_state.get("last_request_id"):
+        try:
+            sl = float(component_value.get("sl", default_values["sl"]))
+            sw = float(component_value.get("sw", default_values["sw"]))
+            pl = float(component_value.get("pl", default_values["pl"]))
+            pw = float(component_value.get("pw", default_values["pw"]))
+        except (TypeError, ValueError):
+            sl = current_sl
+            sw = current_sw
+            pl = current_pl
+            pw = current_pw
+
+        st.session_state["current_sl"] = sl
+        st.session_state["current_sw"] = sw
+        st.session_state["current_pl"] = pl
+        st.session_state["current_pw"] = pw
+        st.session_state["pred_result"] = run_prediction(sl, sw, pl, pw)
+        st.session_state["last_request_id"] = request_id
+        st.rerun()
