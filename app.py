@@ -52,11 +52,20 @@ st.markdown("""
         background-size: cover;
         background-position: center 30%;
         background-attachment: fixed;
-        filter: saturate(0.7) brightness(0.32);
+        filter: saturate(0.7) brightness(1);
         z-index: -1;
     }
     
-    [data-testid="stAppViewContainer"] { background: transparent !important; }
+    html, body, #root, main, section, [data-testid="stAppViewContainer"], [data-testid="stMainContent"], [data-testid="stMainBlockContainer"], [data-testid="stSidebar"] {
+        background: transparent !important;
+        color: var(--cream) !important;
+    }
+    
+    div[class*="css-"] {
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+    
     [data-testid="stMainBlockContainer"] { padding: 3rem 1.5rem 4rem !important; position: relative; z-index: 1; }
     [data-testid="stMainBlockContainer"] > * { max-width: 560px; margin-left: auto; margin-right: auto; }
     
