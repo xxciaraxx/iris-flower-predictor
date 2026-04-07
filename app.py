@@ -13,11 +13,17 @@ model = joblib.load("iris_random_forest_model.joblib")
 # ----------------------------
 st.set_page_config(
     page_title="Iris Species Identifier",
-    page_icon="🌸",
+    page_icon="iris-icon.jpg",
     layout="centered",
 )
 
 BG_PATH = Path("iris-bg2.jpg")
+
+if BG_PATH.exists():
+    bg_data = base64.b64encode(BG_PATH.read_bytes()).decode()
+    bg_css = f"url('data:image/jpeg;base64,{bg_data}')"
+else:
+    bg_css = "linear-gradient(160deg, #2c2a35 0%, #1a2a1e 40%, #0d1a2e 100%)"
 
 st.markdown(
     f"""
@@ -26,7 +32,7 @@ st.markdown(
 
         /* ── Full-page background ── */
         .stApp {{
-            background: url('{BG_PATH}') center/cover no-repeat;
+            background: {bg_css};
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -185,7 +191,7 @@ st.markdown(
         }}
         .result-label {{
             font-family: 'Jost', sans-serif;
-            font-size: 10px;
+            font-size: 20px;
             font-weight: 600;
             letter-spacing: 0.22em;
             text-transform: uppercase;
@@ -194,7 +200,7 @@ st.markdown(
         }}
         .result-species {{
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2.6rem;
+            font-size: 5.6rem;
             font-weight: 400;
             font-style: italic;
             color: #f0ece4;
