@@ -45,6 +45,7 @@ st.markdown(
             position: fixed;
             inset: 0;
             background: rgba(10, 14, 20, 0.55);
+            brightness: 0.85;
             pointer-events: none;
             z-index: 0;
         }}
@@ -200,7 +201,7 @@ st.markdown(
         }}
         .result-species {{
             font-family: 'Cormorant Garamond', serif;
-            font-size: 5.6rem;
+            font-size: 30px;
             font-weight: 400;
             font-style: italic;
             color: #f0ece4;
