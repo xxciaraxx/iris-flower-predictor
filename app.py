@@ -58,10 +58,10 @@ st.markdown(
     """
     <div class="shell hero">
         <div class="hero-top">
-            <div class="hero-icon">✿</div>
-            <h1>Identify the <em>Iris</em></h1>
+            <div class="img src="iris-icon.jpg" class="hero-icon></div>
+            <h1>Identify the <em>Iris</em> Species</h1>
         </div>
-        <p>Enter your measurements below to identify the iris species using a trained machine learning model.</p>
+        <p>Enter the measurements below.</p>
         <div class="meta">Random Forest · 100 Trees · 70/30 Split</div>
     </div>
     """,
