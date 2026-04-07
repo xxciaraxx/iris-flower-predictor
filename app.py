@@ -1,15 +1,3 @@
-"""
-Iris Species Predictor — Streamlit App
-=======================================
-Faithfully replicates the design of index.html using
-st.components.v1.html for the interactive stepper UI
-and Streamlit for the prediction logic.
-
-Run:
-    pip install streamlit scikit-learn joblib pandas
-    streamlit run app.py
-"""
-
 import base64
 import json
 from pathlib import Path
@@ -19,15 +7,13 @@ import numpy as np
 import streamlit as st
 import streamlit.components.v1 as components
 
-# ── Page config ─────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Iris Species Identifier",
+    page_title="Iris Species Predictor",
     page_icon="🌸",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
 MODEL_PATH = Path("iris_model.pkl")
 BG_PATH    = Path("iris-bg2.jpg")
 ICON_PATH  = Path("iris-icon.jpg")
@@ -62,11 +48,13 @@ st.markdown(
         [data-testid="stStatusWidget"] { display: none !important; }
 
         /* Zero-out body / app container padding */
-        html, body { margin: 0 !important; padding: 0 !important; background: #0f1c14 !important; }
+        html, body { margin: 0 !important; padding: 0 !important; width: 100vw !important; min-height: 100vh !important; background: #0f1c14 !important; overflow: hidden !important; }
         [data-testid="stAppViewContainer"],
         [data-testid="stMain"],
         [data-testid="stMainBlockContainer"],
-        section.main > div { padding: 0 !important; background: transparent !important; }
+        .block-container,
+        section.main > div { padding: 0 !important; margin: 0 !important; background: transparent !important; }
+        .css-18e3th9 { background: transparent !important; }
 
         /* Remove default iframe border that Streamlit sometimes adds */
         iframe { border: none !important; }
@@ -75,8 +63,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
-# ── Prediction helper called from JS via query-params trick ──────────────────
 def run_prediction(sl, sw, pl, pw):
     model = load_model()
     if model is None:
@@ -89,7 +75,6 @@ def run_prediction(sl, sw, pl, pw):
     return {"species": pred, "confidence": round(conf, 1), "probabilities": probs}
 
 
-# ── Check for a prediction request passed via query params ───────────────────
 params = st.query_params
 pred_result = None
 
@@ -105,12 +90,9 @@ if "predict" in params:
 
 pred_json = json.dumps(pred_result) if pred_result else "null"
 
-# ── Build base64 URIs for assets ─────────────────────────────────────────────
 bg_uri   = img_to_base64(BG_PATH)
 icon_uri = img_to_base64(ICON_PATH)
 
-# ── Render the full page as a self-contained HTML component ──────────────────
-# We use scrolling=False + a tall height so it fills the viewport naturally.
 html_page = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -245,7 +227,35 @@ html_page = f"""
     line-height: 1; display: block; border: none; background: transparent;
     width: 100%; text-align: center; outline: none; caret-color: var(--gold);
   }}
-  .step-value:focus {{ color: var(--gold); }}
+  .step-value:hover,
+  .step-value:focus,
+  .step-value:active,
+  .step-value:focus-visible {{
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }}
+  input[type=number] {{
+    background: transparent !important;
+    border: none !important;
+    color: inherit !important;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    appearance: none;
+  }}
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button {{
+    -webkit-appearance: none;
+    margin: 0;
+  }}
+  input[type=number]:focus {{
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }}
+  input[type=number]:hover {{
+    background: transparent !important;
+  }}
   .step-unit {{ font-size: 0.6rem; color: rgba(247,241,232,0.2); letter-spacing: 0.1em; margin-top: 0.15rem; display: block; }}
 
   /* BOTTOM BAR */
