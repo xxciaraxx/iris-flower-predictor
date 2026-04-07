@@ -53,126 +53,138 @@ st.markdown(
         .main .block-container {{
             position: relative;
             z-index: 1;
-            padding-top: 3rem;
-            max-width: 700px;
+            padding-top: 4.5rem;
+            max-width: 980px;
+        }}
+
+        .page-shell {{
+            max-width: 880px;
+            margin: 0 auto;
         }}
 
         /* ── Header ── */
         .header-wrap {{
-            text-align: center;
-            margin-bottom: 36px;
+            margin-bottom: 26px;
         }}
-        .header-eyebrow {{
-            font-family: 'Jost', sans-serif;
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: #c8b89a;
+        .header-title-row {{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }}
+        .header-icon {{
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }}
-        .header-eyebrow::before,
-        .header-eyebrow::after {{
-            content: '';
-            display: block;
-            width: 40px;
-            height: 1px;
-            background: #c8b89a;
-            opacity: 0.6;
+            font-size: 30px;
+            background: rgba(200,184,154,0.08);
+            border: 1px solid rgba(200,184,154,0.22);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.18);
         }}
         .header-title {{
             font-family: 'Cormorant Garamond', serif;
-            font-size: 3rem;
-            font-weight: 400;
+            font-size: 3.35rem;
+            font-weight: 600;
             color: #f0ece4;
-            line-height: 1.15;
-            margin: 0 0 10px;
+            line-height: 1.05;
+            margin: 0;
         }}
         .header-title em {{
             font-style: italic;
             color: #c8b89a;
         }}
         .header-subtitle {{
+            font-size: 15px;
+            font-weight: 400;
+            color: rgba(240,236,228,0.72);
+            letter-spacing: 0.01em;
+            max-width: 760px;
+            margin: 0 0 26px;
+        }}
+        .header-meta {{
             font-size: 13px;
             font-weight: 300;
-            color: rgba(240,236,228,0.5);
-            letter-spacing: 0.05em;
-        }}
-        .header-subtitle span {{
-            margin: 0 6px;
-            opacity: 0.4;
+            color: rgba(240,236,228,0.52);
+            letter-spacing: 0.08em;
+            margin-bottom: 18px;
         }}
 
-        /* ── Input card ── */
-        .card {{
-            background: rgba(18, 22, 30, 0.82);
-            border: 1px solid rgba(200, 184, 154, 0.18);
-            border-radius: 12px;
-            overflow: hidden;
-            backdrop-filter: blur(12px);
+        .field-grid {{
             margin-bottom: 14px;
         }}
 
+        .field-group {{
+            margin-bottom: 18px;
+        }}
+
+        .field-label {{
+            font-family: 'Jost', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            color: #c8b89a;
+            margin-bottom: 8px;
+            letter-spacing: 0.04em;
+        }}
+
         div[data-testid="stNumberInput"] label {{
-            font-family: 'Jost', sans-serif !important;
-            font-size: 10px !important;
-            font-weight: 600 !important;
-            letter-spacing: 0.2em !important;
-            text-transform: uppercase !important;
-            color: #c8b89a !important;
+            display: none !important;
+        }}
+        div[data-testid="stNumberInput"] {{
+            background: rgba(18, 22, 30, 0.88);
+            border: 1px solid rgba(200, 184, 154, 0.14);
+            border-radius: 14px;
+            padding: 2px 6px;
+            backdrop-filter: blur(10px);
+        }}
+        div[data-testid="stNumberInput"] > div {{
+            background: transparent !important;
+            border: none !important;
         }}
         div[data-testid="stNumberInput"] input {{
             background: transparent !important;
             border: none !important;
             color: #f0ece4 !important;
             font-family: 'Cormorant Garamond', serif !important;
-            font-size: 2.2rem !important;
+            font-size: 2rem !important;
             font-weight: 400 !important;
-            text-align: center !important;
-            padding: 4px 0 !important;
+            text-align: left !important;
+            padding: 8px 12px !important;
             box-shadow: none !important;
         }}
         div[data-testid="stNumberInput"] button {{
-            background: rgba(200,184,154,0.08) !important;
-            border: 1px solid rgba(200,184,154,0.2) !important;
-            border-radius: 6px !important;
+            background: rgba(200,184,154,0.04) !important;
+            border: 1px solid rgba(200,184,154,0.16) !important;
+            border-radius: 8px !important;
             color: #c8b89a !important;
+            width: 40px !important;
+            height: 40px !important;
         }}
         div[data-testid="stNumberInput"] button:hover {{
             background: rgba(200,184,154,0.18) !important;
         }}
 
         div[data-testid="column"] {{
-            border-right: 1px solid rgba(200,184,154,0.1);
-            padding: 20px 24px !important;
-        }}
-        div[data-testid="column"]:last-child {{
-            border-right: none;
-        }}
-
-        .row-divider {{
-            border: none;
-            border-top: 1px solid rgba(200,184,154,0.1);
-            margin: 0;
+            padding: 0 10px !important;
         }}
 
         /* ── Identify button ── */
         div[data-testid="stButton"] > button {{
             background: transparent !important;
-            border: 1px solid rgba(200,184,154,0.35) !important;
-            border-radius: 8px !important;
+            border: 1px solid rgba(200,184,154,0.42) !important;
+            border-radius: 12px !important;
             color: #f0ece4 !important;
             font-family: 'Jost', sans-serif !important;
-            font-size: 11px !important;
+            font-size: 12px !important;
             font-weight: 600 !important;
             letter-spacing: 0.22em !important;
             text-transform: uppercase !important;
-            padding: 16px !important;
+            padding: 15px 24px !important;
             transition: background 0.2s, border-color 0.2s;
+            width: auto !important;
+            min-width: 270px;
         }}
         div[data-testid="stButton"] > button:hover {{
             background: rgba(200,184,154,0.1) !important;
@@ -183,10 +195,10 @@ st.markdown(
         .result-box {{
             background: rgba(18, 22, 30, 0.82);
             border: 1px solid rgba(200, 184, 154, 0.25);
-            border-radius: 12px;
+            border-radius: 18px;
             padding: 32px;
             text-align: center;
-            margin-top: 14px;
+            margin-top: 24px;
             backdrop-filter: blur(12px);
         }}
         .result-label {{
@@ -210,7 +222,7 @@ st.markdown(
         }}
         .result-confidence {{
             font-family: 'Jost', sans-serif;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 400;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -219,6 +231,25 @@ st.markdown(
         }}
 
         #MainMenu, footer, header {{ visibility: hidden; }}
+
+        @media (max-width: 768px) {{
+            .main .block-container {{
+                padding-top: 2.4rem;
+            }}
+            .header-title {{
+                font-size: 2.5rem;
+            }}
+            .header-title-row {{
+                align-items: flex-start;
+            }}
+            .header-subtitle {{
+                font-size: 14px;
+            }}
+            div[data-testid="stButton"] > button {{
+                width: 100% !important;
+                min-width: 0;
+            }}
+        }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -229,58 +260,65 @@ st.markdown(
 # ----------------------------
 st.markdown(
     """
-    <div class="header-wrap">
-        <div class="header-eyebrow">Iris Species Predictor</div>
-        <h1 class="header-title">Identify the <em>Iris</em></h1>
-        <p class="header-subtitle">
-            Random Forest
-            <span>·</span>
-            100 Trees
-            <span>·</span>
-            70/30 Split
-        </p>
+    <div class="page-shell">
+        <div class="header-wrap">
+            <div class="header-title-row">
+                <div class="header-icon">✿</div>
+                <h1 class="header-title">Identify the <em>Iris</em></h1>
+            </div>
+            <p class="header-subtitle">Enter your measurements below to identify the iris species using a trained machine learning model.</p>
+            <div class="header-meta">Random Forest · 100 Trees · 70/30 Split</div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 # ----------------------------
-# Input Card
+# Input Grid
 # ----------------------------
-st.markdown('<div class="card">', unsafe_allow_html=True)
+st.markdown('<div class="page-shell"><div class="field-grid">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 with col1:
+    st.markdown('<div class="field-group"><div class="field-label">Sepal Length (cm)</div>', unsafe_allow_html=True)
     sepal_length = st.number_input(
-        "• Sepal Length", min_value=0.0, max_value=10.0, value=5.8,
+        "Sepal Length", min_value=0.0, max_value=10.0, value=5.8,
         step=0.1, format="%.1f", key="sl"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 with col2:
+    st.markdown('<div class="field-group"><div class="field-label">Sepal Width (cm)</div>', unsafe_allow_html=True)
     sepal_width = st.number_input(
-        "• Sepal Width", min_value=0.0, max_value=10.0, value=3.0,
+        "Sepal Width", min_value=0.0, max_value=10.0, value=3.0,
         step=0.1, format="%.1f", key="sw"
     )
-
-st.markdown('<hr class="row-divider">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 col3, col4 = st.columns(2)
 with col3:
+    st.markdown('<div class="field-group"><div class="field-label">Petal Length (cm)</div>', unsafe_allow_html=True)
     petal_length = st.number_input(
-        "• Petal Length", min_value=0.0, max_value=10.0, value=3.8,
+        "Petal Length", min_value=0.0, max_value=10.0, value=3.8,
         step=0.1, format="%.1f", key="pl"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 with col4:
+    st.markdown('<div class="field-group"><div class="field-label">Petal Width (cm)</div>', unsafe_allow_html=True)
     petal_width = st.number_input(
-        "• Petal Width", min_value=0.0, max_value=10.0, value=1.2,
+        "Petal Width", min_value=0.0, max_value=10.0, value=1.2,
         step=0.1, format="%.1f", key="pw"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div></div>", unsafe_allow_html=True)
 
 # ----------------------------
 # Predict Button
 # ----------------------------
-predict_btn = st.button("Identify Species", use_container_width=True)
+st.markdown('<div class="page-shell">', unsafe_allow_html=True)
+predict_btn = st.button("Identify Species", use_container_width=False)
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------------------------
 # Species Mapping
@@ -302,10 +340,12 @@ if predict_btn:
 
     st.markdown(
         f"""
-        <div class="result-box">
-            <div class="result-label">Predicted Species</div>
-            <p class="result-species" style="font-size:64px; line-height:1.05; margin:10px 0 16px;">{species_map[prediction]}</p>
-            <p class="result-confidence">Confidence: {confidence:.1f}%</p>
+        <div class="page-shell">
+            <div class="result-box">
+                <div class="result-label">Predicted Species</div>
+                <p class="result-species" style="font-size:64px; line-height:1.05; margin:10px 0 16px;">{species_map[prediction]}</p>
+                <p class="result-confidence">Confidence: {confidence:.1f}%</p>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
