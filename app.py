@@ -1,60 +1,80 @@
-import streamlit as st
-import pandas as pd
-import json
-import base64
-import streamlit.components.v1 as components
+from flask import Flask, request, jsonify, send_from_directory
+import joblib
+import numpy as np
+import os
 
-st.set_page_config(page_title='Iris Species Identifier', page_icon='iris-icon.jpg', layout='wide')
+app = Flask(__name__)
 
-st.markdown(
-    """
-    <style>
-      .css-18e3th9, .css-1d391kg, .main, .block-container {
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: 100% !important;
-        width: 100% !important;
-      }
-      .stApp, .reportview-container, .main {
-        background: #0f1c14 !important;
-      }
-      iframe {
-        width: 100% !important;
-      }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+MODEL_PATH = 'iris_model.pkl'
 
-@st.cache_data
-def load_model():
-    with open('rf_model.json', 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-@st.cache_data
-def load_dataset():
-    return pd.read_csv('iris.csv')
-
-model = load_model()
-dataset = load_dataset()
-
-rows = []
-for index, row in dataset.iterrows():
-    rows.append(
-        f'<tr class="dataset-row" data-species="{row["species"]}">'
-        f'<td>{index + 1}</td>'
-        f'<td>{row["sepal_length"]}</td>'
-        f'<td>{row["sepal_width"]}</td>'
-        f'<td>{row["petal_length"]}</td>'
-        f'<td>{row["petal_width"]}</td>'
-        f'<td>{row["species"]}</td>'
-        '</tr>'
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(
+        f"\n\n❌  '{MODEL_PATH}' not found!\n"
     )
 
-dataset_rows = ''.join(rows)
+model = joblib.load(MODEL_PATH)
+print(f"✅  Model loaded from {MODEL_PATH}")
+print(f"    Classes  : {list(model.classes_)}")
+print(f"    N trees  : {model.n_estimators}")
 
-with open('iris-bg2.jpg', 'rb') as f:
-    bg_image_data = base64.b64encode(f.read()).decode('utf-8')
+@app.route('/')
+def index():
+    return send_from_directory('.', 'iris_predictor.html')
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        data = request.get_json(force=True)
+
+        required = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+        missing  = [f for f in required if f not in data]
+        if missing:
+            return jsonify({'error': f'Missing fields: {missing}'}), 400
+
+        features = np.array([[
+            float(data['sepal_length']),
+            float(data['sepal_width']),
+            float(data['petal_length']),
+            float(data['petal_width']),
+        ]])
+
+        # Predict
+        prediction  = model.predict(features)[0]
+        probas      = model.predict_proba(features)[0]
+        confidence  = float(probas.max())
+
+        prob_dict = {
+            cls: round(float(p), 4)
+            for cls, p in zip(model.classes_, probas)
+        }
+
+        return jsonify({
+            'species':     prediction,
+            'confidence':  round(confidence * 100, 1),
+            'probabilities': prob_dict
+        })
+
+    except ValueError as e:
+        return jsonify({'error': f'Invalid input values: {e}'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── Health check ──
+@app.route('/health')
+def health():
+    return jsonify({
+        'status':  'ok',
+        'model':   MODEL_PATH,
+        'classes': list(model.classes_),
+        'n_trees': model.n_estimators
+    })
+
+
+if __name__ == '__main__':
+    print("\n🌸  Iris Predictor API running at http://localhost:5000")
+    print("    Press Ctrl+C to stop.\n")
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
 html_template = '''<!DOCTYPE html>
 <html lang="en">
@@ -62,11 +82,11 @@ html_template = '''<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iris Species Identifier</title>
-<link rel="icon" href="iris-icon.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after {{ margin:0; padding:0; box-sizing:border-box; }}
-  :root {{
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
     --cream: #f7f1e8;
     --dark: #0f1c14;
     --gold: #c8a96e;
@@ -74,92 +94,247 @@ html_template = '''<!DOCTYPE html>
     --setosa: #7ecba1;
     --versicolor: #6ba3d6;
     --virginica: #c57ebf;
-  }}
-  html, body {{ min-height:100%; }}
-  body {{ font-family:'DM Sans', sans-serif; min-height:100vh; background:var(--dark); color:var(--cream); overflow-x:hidden; }}
-  .hero-bg {{ position:fixed; inset:0; z-index:0; background-image:url("data:image/jpeg;base64,{bg_image_data}"); background-size:cover; background-position:center 30%; filter:saturate(0.7) brightness(1); }}
-  .hero-bg::after {{ content:''; position:absolute; inset:0; background:linear-gradient(160deg, rgba(15,28,20,0.5) 0%, rgba(15,28,20,0.9) 100%); }}
-  .page {{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:3rem 1.5rem 1.5rem; }}
-  header {{ text-align:center; margin-bottom:3rem; }}
-  .eyebrow {{ font-size:0.75rem; letter-spacing:0.26em; text-transform:uppercase; color:var(--gold); display:inline-flex; align-items:center; gap:0.8rem; margin-bottom:0.9rem; }}
-  .eyebrow::before, .eyebrow::after {{ content:''; width:34px; height:1px; background:var(--gold); opacity:0.45; }}
-  h1 {{ font-family:'Playfair Display', serif; font-size:clamp(2.2rem, 5vw, 3.6rem); font-weight:400; line-height:1.05; margin-bottom:0.4rem; }}
-  h1 em {{ font-style:italic; color:var(--gold-light); }}
-  .subtitle {{ font-size:0.86rem; color:rgba(247,241,232,0.42); font-weight:300; letter-spacing:0.03em; }}
-  .steppers {{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; width:100%; max-width:560px; background:rgba(200,169,110,0.12); border:1px solid rgba(200,169,110,0.12); border-radius:6px 6px 0 0; overflow:hidden; }}
-  .stepper-cell {{ background:rgba(10,20,13,0.75); backdrop-filter:blur(20px); padding:1.6rem 1.4rem; display:flex; flex-direction:column; align-items:center; gap:0.8rem; position:relative; }}
-  .stepper-cell::before {{ content:''; position:absolute; top:0; left:0; right:0; height:2px; opacity:0; transition:opacity 0.3s; }}
-  .stepper-cell.sepal::before {{ background:linear-gradient(90deg, transparent, var(--setosa), transparent); }}
-  .stepper-cell.petal::before {{ background:linear-gradient(90deg, transparent, var(--virginica), transparent); }}
-  .stepper-cell:hover::before, .stepper-cell:focus-within::before {{ opacity:1; }}
-  .stepper-label {{ font-size:0.65rem; font-weight:500; letter-spacing:0.2em; text-transform:uppercase; color:rgba(247,241,232,0.35); display:flex; align-items:center; gap:0.4rem; }}
-  .part-pip {{ width:5px; height:5px; border-radius:50%; flex-shrink:0; }}
-  .sepal .part-pip {{ background:var(--setosa); }}
-  .petal .part-pip {{ background:var(--virginica); }}
-  .stepper-control {{ display:flex; align-items:center; width:100%; gap:0; }}
-  .step-btn {{ flex-shrink:0; width:38px; height:38px; background:rgba(200,169,110,0.08); border:1px solid rgba(200,169,110,0.2); border-radius:4px; color:var(--gold); font-size:1.35rem; font-weight:300; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s, transform 0.1s; user-select:none; }}
-  .step-btn:hover {{ background:rgba(200,169,110,0.18); border-color:rgba(200,169,110,0.5); }}
-  .step-btn:active, .step-btn.held {{ transform:scale(0.91); background:rgba(200,169,110,0.28); }}
-  .step-display {{ flex:1; text-align:center; }}
-  .step-value {{ font-family:'Playfair Display', serif; font-size:2.1rem; font-weight:400; color:var(--gold-light); line-height:1; display:block; width:100%; text-align:center; border:none; background:transparent; outline:none; caret-color:var(--gold); }}
-  .step-unit {{ font-size:0.6rem; color:rgba(247,241,232,0.2); letter-spacing:0.1em; margin-top:0.15rem; display:block; }}
-  .bottom-bar {{ width:100%; max-width:560px; background:rgba(10,20,13,0.75); backdrop-filter:blur(20px); border:1px solid rgba(200,169,110,0.12); border-top:none; border-radius:0 0 6px 6px; padding:0.85rem 1.4rem; display:flex; align-items:center; gap:0.6rem; }}
-  .samples-label {{ font-size:0.6rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(247,241,232,0.2); flex-shrink:0; }}
-  .pill {{ background:none; border:1px solid rgba(247,241,232,0.12); border-radius:20px; padding:0.28rem 0.85rem; font-size:0.7rem; font-style:italic; color:rgba(247,241,232,0.38); cursor:pointer; letter-spacing:0.04em; transition:all 0.2s; font-family:'Playfair Display', serif; }}
-  .pill:hover {{ border-color:var(--gold); color:var(--gold-light); }}
-  .predict-btn {{ width:100%; max-width:560px; margin-top:1.2rem; margin-bottom:2rem; padding:1rem; background:transparent; border:1px solid var(--gold); border-radius:4px; color:var(--gold-light); font-family:'DM Sans', sans-serif; font-size:0.78rem; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; cursor:pointer; }}
-  .predict-btn:hover {{ color:var(--dark); background:rgba(200,169,110,0.08); }}
-  .dataset-card {{ background:rgba(10,20,13,0.82); border:1px solid rgba(200,169,110,0.15); border-radius:16px; padding:1.8rem; width:100%; max-width:1000px; margin-top:1rem; }}
-  .result-panel {{ width:100%; max-width:560px; margin-top:1.4rem; display:none; animation:riseIn 0.45s cubic-bezier(0.22,0.61,0.36,1) both; }}
-  @keyframes riseIn {{ from {{ opacity:0; transform:translateY(14px); }} to {{ opacity:1; transform:translateY(0); }} }}
-  .result-inner {{ background:rgba(10,20,13,0.82); backdrop-filter:blur(24px); border:1px solid rgba(200,169,110,0.15); border-radius:6px; padding:1.8rem 2rem; position:relative; overflow:hidden; }}
-  .result-glow {{ position:absolute; inset:0; opacity:0.07; transition:background 0.5s; pointer-events:none; }}
-  .result-glow.setosa {{ background:radial-gradient(ellipse at 85% 50%, var(--setosa), transparent 65%); }}
-  .result-glow.versicolor {{ background:radial-gradient(ellipse at 85% 50%, var(--versicolor), transparent 65%); }}
-  .result-glow.virginica {{ background:radial-gradient(ellipse at 85% 50%, var(--virginica), transparent 65%); }}
-  .result-top {{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:1.6rem; }}
-  .result-label {{ font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(247,241,232,0.28); margin-bottom:0.35rem; }}
-  .result-name {{ font-family:'Playfair Display', serif; font-size:2.1rem; font-weight:400; font-style:italic; line-height:1; }}
-  .result-name.setosa {{ color:var(--setosa); }}
-  .result-name.versicolor {{ color:var(--versicolor); }}
-  .result-name.virginica {{ color:var(--virginica); }}
-  .result-conf-block {{ text-align:right; }}
-  .result-conf-big {{ font-family:'Playfair Display', serif; font-size:2.6rem; font-weight:400; color:var(--gold-light); margin:0; }}
-  .bars-label {{ font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(247,241,232,0.18); margin-bottom:0.9rem; }}
-  .bar-row {{ display:grid; grid-template-columns:100px 1fr 44px; align-items:center; gap:0.9rem; margin-bottom:0.7rem; }}
-  .bar-name {{ font-size:0.73rem; font-style:italic; font-family:'Playfair Display', serif; color:rgba(247,241,232,0.45); }}
-  .bar-track {{ height:3px; background:rgba(247,241,232,0.07); border-radius:2px; overflow:hidden; }}
-  .bar-fill {{ height:100%; border-radius:2px; width:0; transition:width 0.7s cubic-bezier(0.22,0.61,0.36,1); }}
-  .bar-fill.setosa {{ background:var(--setosa); }}
-  .bar-fill.versicolor {{ background:var(--versicolor); }}
-  .bar-fill.virginica {{ background:var(--virginica); }}
-  .bar-pct {{ font-size:0.72rem; color:rgba(247,241,232,0.38); text-align:right; }}
-  .dataset-card {{ background:rgba(10,20,13,0.82); border:1px solid rgba(200,169,110,0.15); border-radius:16px; padding:1.8rem; width:100%; max-width:1000px; }}
-  .dataset-header {{ display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:1rem; }}
-  .dataset-eyebrow {{ font-family:'Playfair Display', serif; font-size:0.95rem; margin-bottom:0.3rem; color:#e8d5a8; }}
-  .dataset-copy {{ font-size:0.82rem; color:rgba(247,241,232,0.5); margin:0; }}
-  .dataset-meta {{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.14em; color:rgba(247,241,232,0.22); white-space:nowrap; }}
-  .dataset-tabs {{ display:flex; flex-wrap:wrap; gap:0.65rem; margin-bottom:1.2rem; }}
-  .dataset-tab {{ background:none; border:1px solid rgba(247,241,232,0.12); border-radius:999px; padding:0.65rem 0.95rem; color:rgba(247,241,232,0.7); cursor:pointer; font-size:0.72rem; }}
-  .dataset-tab.active, .dataset-tab:hover {{ border-color:#c8a96e; color:#e8d5a8; background:rgba(200,169,110,0.12); }}
-  .dataset-table-wrap {{ overflow-x:auto; max-height:360px; }}
-  .dataset-table {{ width:100%; border-collapse:collapse; min-width:680px; background:rgba(247,241,232,0.03); }}
-  .dataset-table th, .dataset-table td {{ padding:0.95rem 0.9rem; text-align:left; border-bottom:1px solid rgba(247,241,232,0.08); color:rgba(247,241,232,0.72); }}
-  .dataset-table th {{ color:rgba(247,241,232,0.36); font-weight:500; letter-spacing:0.12em; text-transform:uppercase; font-size:0.72rem; }}
-  .dataset-table tbody tr:hover {{ background:rgba(247,241,232,0.05); }}
-  footer {{ margin-top:2rem; text-align:center; font-size:0.65rem; color:rgba(247,241,232,0.18); letter-spacing:0.08em; }}
-  @media (max-width: 480px) {{ .steppers {{ grid-template-columns:1fr; }} }}
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    background: var(--dark);
+    color: var(--cream);
+    overflow-x: hidden;
+  }
+
+  .hero-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url('https://images.unsplash.com/photo-1490750967868-88df5691cc06?w=1920&q=80');
+    background-size: cover;
+    background-position: center 30%;
+    filter: saturate(0.7) brightness(0.32);
+  }
+  .hero-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(15,28,20,0.5) 0%, rgba(15,28,20,0.9) 100%);
+  }
+
+  .page {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  /* ── HEADER ── */
+  header { text-align: center; margin-bottom: 3rem; }
+
+  .eyebrow {
+    font-size: 0.68rem; font-weight: 500;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.8rem; margin-bottom: 0.8rem;
+  }
+  .eyebrow::before, .eyebrow::after {
+    content: ''; width: 36px; height: 1px;
+    background: var(--gold); opacity: 0.45;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 400; line-height: 1.1; margin-bottom: 0.5rem;
+  }
+  h1 em { font-style: italic; color: var(--gold-light); }
+
+  .subtitle {
+    font-size: 0.82rem; color: rgba(247,241,232,0.4);
+    font-weight: 300; letter-spacing: 0.03em;
+  }
+
+  /* ── STEPPER GRID ── */
+  .steppers {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    width: 100%; max-width: 560px;
+    background: rgba(200,169,110,0.12);
+    border: 1px solid rgba(200,169,110,0.12);
+    border-radius: 6px 6px 0 0;
+    overflow: hidden;
+  }
+
+  .stepper-cell {
+    background: rgba(10,20,13,0.75);
+    backdrop-filter: blur(20px);
+    padding: 1.6rem 1.4rem;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.8rem; position: relative;
+  }
+  .stepper-cell::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .stepper-cell.sepal::before { background: linear-gradient(90deg, transparent, var(--setosa), transparent); }
+  .stepper-cell.petal::before { background: linear-gradient(90deg, transparent, var(--virginica), transparent); }
+  .stepper-cell:hover::before, .stepper-cell:focus-within::before { opacity: 1; }
+
+  .stepper-label {
+    font-size: 0.65rem; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(247,241,232,0.35);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .part-pip { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .sepal .part-pip { background: var(--setosa); }
+  .petal .part-pip { background: var(--virginica); }
+
+  .stepper-control { display: flex; align-items: center; width: 100%; }
+
+  .step-btn {
+    flex-shrink: 0; width: 38px; height: 38px;
+    background: rgba(200,169,110,0.08);
+    border: 1px solid rgba(200,169,110,0.2);
+    border-radius: 4px; color: var(--gold);
+    font-size: 1.35rem; font-weight: 300;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    user-select: none; -webkit-user-select: none; line-height: 1;
+  }
+  .step-btn:hover { background: rgba(200,169,110,0.18); border-color: rgba(200,169,110,0.5); }
+  .step-btn:active, .step-btn.held { transform: scale(0.91); background: rgba(200,169,110,0.28); }
+
+  .step-display { flex: 1; text-align: center; }
+  .step-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.1rem; font-weight: 400; color: var(--gold-light);
+    line-height: 1; display: block; border: none; background: transparent;
+    width: 100%; text-align: center; outline: none; caret-color: var(--gold);
+  }
+  .step-value:focus { color: var(--gold); }
+  .step-unit { font-size: 0.6rem; color: rgba(247,241,232,0.2); letter-spacing: 0.1em; margin-top: 0.15rem; display: block; }
+
+  /* ── BOTTOM BAR ── */
+  .bottom-bar {
+    width: 100%; max-width: 560px;
+    background: rgba(10,20,13,0.75); backdrop-filter: blur(20px);
+    border: 1px solid rgba(200,169,110,0.12); border-top: none;
+    border-radius: 0 0 6px 6px;
+    padding: 0.85rem 1.4rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .samples-label { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(247,241,232,0.2); flex-shrink: 0; }
+  .pill {
+    background: none; border: 1px solid rgba(247,241,232,0.12);
+    border-radius: 20px; padding: 0.28rem 0.85rem;
+    font-size: 0.7rem; font-style: italic;
+    font-family: 'Playfair Display', serif;
+    color: rgba(247,241,232,0.38); cursor: pointer;
+    letter-spacing: 0.04em; transition: all 0.2s; flex-shrink: 0;
+  }
+  .pill:hover { border-color: var(--gold); color: var(--gold-light); }
+
+  /* ── PREDICT BUTTON ── */
+  .predict-btn {
+    width: 100%; max-width: 560px; margin-top: 1.2rem; padding: 1rem;
+    background: transparent; border: 1px solid var(--gold); border-radius: 4px;
+    color: var(--gold-light); font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.22em;
+    text-transform: uppercase; cursor: pointer;
+    position: relative; overflow: hidden; transition: color 0.3s;
+  }
+  .predict-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--gold); transform: scaleX(0);
+    transform-origin: left; transition: transform 0.35s cubic-bezier(0.22,0.61,0.36,1); z-index: -1;
+  }
+  .predict-btn:hover:not(:disabled) { color: var(--dark); }
+  .predict-btn:hover:not(:disabled)::before { transform: scaleX(1); }
+  .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── RESULT ── */
+  .result-panel {
+    width: 100%; max-width: 560px; margin-top: 1.4rem;
+    display: none; animation: riseIn 0.45s cubic-bezier(0.22,0.61,0.36,1) both;
+  }
+  @keyframes riseIn {
+    from { opacity:0; transform: translateY(14px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .result-inner {
+    background: rgba(10,20,13,0.82); backdrop-filter: blur(24px);
+    border: 1px solid rgba(200,169,110,0.15);
+    border-radius: 6px; padding: 1.8rem 2rem;
+    position: relative; overflow: hidden;
+  }
+  .result-glow {
+    position: absolute; inset: 0; opacity: 0.07;
+    transition: background 0.5s; pointer-events: none;
+  }
+  .result-glow.setosa    { background: radial-gradient(ellipse at 85% 50%, var(--setosa),     transparent 65%); }
+  .result-glow.versicolor{ background: radial-gradient(ellipse at 85% 50%, var(--versicolor), transparent 65%); }
+  .result-glow.virginica { background: radial-gradient(ellipse at 85% 50%, var(--virginica),  transparent 65%); }
+
+  .result-top {
+    display: flex; align-items: flex-end;
+    justify-content: space-between; margin-bottom: 1.6rem; position: relative;
+  }
+  .result-label { font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(247,241,232,0.28); margin-bottom: 0.35rem; }
+  .result-name { font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 400; font-style: italic; line-height: 1; }
+  .result-name.setosa     { color: var(--setosa); }
+  .result-name.versicolor { color: var(--versicolor); }
+  .result-name.virginica  { color: var(--virginica); }
+
+  .result-conf-block { text-align: right; }
+  .conf-label-sm { font-size: 0.62rem; color: rgba(247,241,232,0.28); letter-spacing: 0.12em; text-transform: uppercase; }
+  .result-conf-big { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 400; color: var(--gold-light); line-height: 1; }
+
+  .bars-label { font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(247,241,232,0.18); margin-bottom: 0.9rem; }
+  .bar-row { display: grid; grid-template-columns: 100px 1fr 44px; align-items: center; gap: 0.9rem; margin-bottom: 0.7rem; }
+  .bar-name { font-size: 0.73rem; font-style: italic; font-family: 'Playfair Display', serif; color: rgba(247,241,232,0.45); }
+  .bar-track { height: 3px; background: rgba(247,241,232,0.07); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; width: 0; transition: width 0.7s cubic-bezier(0.22,0.61,0.36,1); }
+  .bar-fill.setosa     { background: var(--setosa); }
+  .bar-fill.versicolor { background: var(--versicolor); }
+  .bar-fill.virginica  { background: var(--virginica); }
+  .bar-pct { font-size: 0.72rem; color: rgba(247,241,232,0.38); text-align: right; }
+
+  /* Error banner */
+  .error-banner {
+    width: 100%; max-width: 560px; margin-top: 1rem;
+    background: rgba(180,50,50,0.2); border: 1px solid rgba(220,80,80,0.4);
+    border-radius: 4px; padding: 0.85rem 1.2rem;
+    font-size: 0.8rem; color: #f8a0a0; display: none;
+  }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(200,169,110,0.3);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 0.4rem;
+  }
+
+  footer { margin-top: 3rem; text-align: center; font-size: 0.65rem; color: rgba(247,241,232,0.18); letter-spacing: 0.08em; }
+
+  @media (max-width: 480px) { .steppers { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
+
 <div class="hero-bg"></div>
+
 <div class="page">
+
   <header>
-    <div class="eyebrow">Iris Flower Predictor</div>
+    <div class="eyebrow">Botanical Classifier</div>
     <h1>Identify the <em>Iris</em></h1>
-    <p class="subtitle">Random Forest · 100 Trees · 70/30 Split · 100% Test Accuracy</p>
+    <p class="subtitle">Random Forest · 100 Trees · 70/30 Split · Powered by Flask + Joblib</p>
   </header>
+
   <div class="steppers">
+
     <div class="stepper-cell sepal">
       <span class="stepper-label"><span class="part-pip"></span>Sepal Length</span>
       <div class="stepper-control">
@@ -171,6 +346,7 @@ html_template = '''<!DOCTYPE html>
         <button class="step-btn" data-field="sepal_length" data-dir="1">+</button>
       </div>
     </div>
+
     <div class="stepper-cell sepal">
       <span class="stepper-label"><span class="part-pip"></span>Sepal Width</span>
       <div class="stepper-control">
@@ -182,6 +358,7 @@ html_template = '''<!DOCTYPE html>
         <button class="step-btn" data-field="sepal_width" data-dir="1">+</button>
       </div>
     </div>
+
     <div class="stepper-cell petal">
       <span class="stepper-label"><span class="part-pip"></span>Petal Length</span>
       <div class="stepper-control">
@@ -193,6 +370,7 @@ html_template = '''<!DOCTYPE html>
         <button class="step-btn" data-field="petal_length" data-dir="1">+</button>
       </div>
     </div>
+
     <div class="stepper-cell petal">
       <span class="stepper-label"><span class="part-pip"></span>Petal Width</span>
       <div class="stepper-control">
@@ -204,14 +382,20 @@ html_template = '''<!DOCTYPE html>
         <button class="step-btn" data-field="petal_width" data-dir="1">+</button>
       </div>
     </div>
+
   </div>
+
   <div class="bottom-bar">
     <span class="samples-label">Try</span>
-    <button class="pill" onclick="fillSample(5.1,3.5,1.4,0.2)">setosa</button>
-    <button class="pill" onclick="fillSample(6.0,2.9,4.5,1.5)">versicolor</button>
-    <button class="pill" onclick="fillSample(6.3,3.3,6.0,2.5)">virginica</button>
+    <button class="pill" onclick="fillSample(5.1,3.5,1.4,0.2)">I. setosa</button>
+    <button class="pill" onclick="fillSample(6.0,2.9,4.5,1.5)">I. versicolor</button>
+    <button class="pill" onclick="fillSample(6.3,3.3,6.0,2.5)">I. virginica</button>
   </div>
-  <button class="predict-btn" onclick="identify()">Identify Species</button>
+
+  <button class="predict-btn" id="predict-btn" onclick="predict()">Identify Species</button>
+
+  <div class="error-banner" id="error-banner"></div>
+
   <div class="result-panel" id="result-panel">
     <div class="result-inner">
       <div class="result-glow" id="result-glow"></div>
@@ -243,165 +427,115 @@ html_template = '''<!DOCTYPE html>
       </div>
     </div>
   </div>
-  <section class="dataset-card">
-    <div class="dataset-header">
-      <div>
-        <div class="dataset-eyebrow">Iris Dataset Reference</div>
-        <p class="dataset-copy">Use this table to compare your inputs against real measurements in the dataset.</p>
-      </div>
-      <div class="dataset-meta">150 samples · 3 species · 4 features</div>
-    </div>
-    <div class="dataset-tabs">
-      <button class="dataset-tab active" data-filter="all">🌸 All Species</button>
-      <button class="dataset-tab" data-filter="setosa">🌿 Setosa</button>
-      <button class="dataset-tab" data-filter="versicolor">🍃 Versicolor</button>
-      <button class="dataset-tab" data-filter="virginica">🌺 Virginica</button>
-    </div>
-    <div class="dataset-table-wrap">
-      <table class="dataset-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>sepal length (cm)</th>
-            <th>sepal width (cm)</th>
-            <th>petal length (cm)</th>
-            <th>petal width (cm)</th>
-            <th>species</th>
-          </tr>
-        </thead>
-        <tbody id="dataset-table-body">
-          {dataset_rows}
-        </tbody>
-      </table>
-    </div>
-  </section>
+
   <footer>
-    Iris Dataset · scikit-learn RandomForestClassifier · Model: rf_model.json · Photo: Unsplash
+    Iris Dataset &nbsp;·&nbsp; scikit-learn RandomForestClassifier &nbsp;·&nbsp;
+    Model saved with joblib &nbsp;·&nbsp; Served by Flask &nbsp;·&nbsp; Photo: Unsplash
   </footer>
 </div>
+
 <script>
-const RF_MODEL = {model_json};
 const FEATURES = ['sepal_length','sepal_width','petal_length','petal_width'];
-let identified = false;
+const API_URL  = '/predict';   // Flask backend endpoint
 
-function traverseTree(node, s) {{
-  if (node.leaf) return node.class;
-  return s[node.feature] <= node.threshold ? traverseTree(node.left, s) : traverseTree(node.right, s);
-}}
-
-function predictRF(s) {{
-  const votes = {{ setosa:0, versicolor:0, virginica:0 }};
-  RF_MODEL.trees.forEach(t => {{ votes[traverseTree(t, s)]++; }});
-  const n = RF_MODEL.trees.length;
-  const probs = {{}};
-  Object.keys(votes).forEach(k => probs[k] = votes[k] / n);
-  const predicted = Object.keys(votes).reduce((a,b) => votes[a] > votes[b] ? a : b);
-  return {{ predicted, probs }};
-}}
-
-function setValues(values) {{
-  FEATURES.forEach(f => {{
-    document.getElementById('val-' + f).value = values[f].toFixed(1);
-  }});
-}}
-
-function evaluatePrediction() {{
-  const s = {{}};
-  FEATURES.forEach(f => {{
-    const el = document.getElementById('val-' + f);
-    let v = parseFloat(el.value);
-    if (isNaN(v)) v = parseFloat(el.min);
-    s[f] = Math.min(parseFloat(el.max), Math.max(parseFloat(el.min), v));
-  }});
-  return predictRF(s);
-}}
-
-function renderPrediction({{ predicted, probs }}) {{
-  const panel = document.getElementById('result-panel');
-  panel.style.display = 'block';
-  panel.style.animation = 'none';
-  void panel.offsetWidth;
-  panel.style.animation = '';
-  const nameEl = document.getElementById('result-name');
-  nameEl.className = 'result-name ' + predicted;
-  nameEl.textContent = predicted.charAt(0).toUpperCase() + predicted.slice(1);
-  document.getElementById('result-conf').textContent = (probs[predicted] * 100).toFixed(1) + '%';
-  document.getElementById('result-glow').className = 'result-glow ' + predicted;
-  RF_MODEL.classes.forEach(cls => {{
-    const pct = (probs[cls] * 100).toFixed(1);
-    document.getElementById('bar-' + cls).style.width = pct + '%';
-    document.getElementById('pct-' + cls).textContent = pct + '%';
-  }});
-}}
-
-function computePrediction() {{
-  if (identified) {{
-    renderPrediction(evaluatePrediction());
-  }}
-}}
-
-function identify() {{
-  identified = true;
-  renderPrediction(evaluatePrediction());
-}}
-
-function fillSample(sl, sw, pl, pw) {{
-  const values = {{ sepal_length: sl, sepal_width: sw, petal_length: pl, petal_width: pw }};
-  setValues(values);
-  identify();
-}}
-
+// ── Stepper buttons with hold-to-repeat ──
 let holdTimer = null, holdInterval = null;
 
-document.querySelectorAll('.step-btn').forEach(btn => {{
-  const field = btn.dataset.field;
-  const dir = parseInt(btn.dataset.dir);
-  const startHold = () => {{
-    btn.classList.add('held');
-    holdTimer = setTimeout(() => {{
-      holdInterval = setInterval(() => step(field, dir), 80);
-    }}, 350);
-  }};
-  const stopHold = () => {{
-    btn.classList.remove('held');
-    clearTimeout(holdTimer);
-    clearInterval(holdInterval);
-  }};
-  btn.addEventListener('mousedown', startHold);
-  btn.addEventListener('touchstart', startHold, {{ passive: true }});
-  btn.addEventListener('mouseup', stopHold);
-  btn.addEventListener('mouseleave', stopHold);
-  btn.addEventListener('touchend', stopHold);
-  btn.addEventListener('click', () => step(field, dir));
-}});
-
-function step(field, dir) {{
+function step(field, dir) {
   const input = document.getElementById('val-' + field);
   let v = Math.round((parseFloat(input.value) + dir * 0.1) * 10) / 10;
   v = Math.min(parseFloat(input.max), Math.max(parseFloat(input.min), v));
   input.value = v.toFixed(1);
-  computePrediction();
-}}
+}
 
-FEATURES.forEach(f => {{
-  document.getElementById('val-' + f).addEventListener('change', computePrediction);
-}});
+document.querySelectorAll('.step-btn').forEach(btn => {
+  const field = btn.dataset.field;
+  const dir   = parseInt(btn.dataset.dir);
 
-const tabButtons = document.querySelectorAll('.dataset-tab');
-tabButtons.forEach(btn => {{
-  btn.addEventListener('click', () => {{
-    tabButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const filter = btn.dataset.filter;
-    document.querySelectorAll('.dataset-row').forEach(row => {{
-      row.style.display = filter === 'all' || row.dataset.species === filter ? '' : 'none';
-    }});
-  }});
-}});
+  const startHold = () => {
+    btn.classList.add('held');
+    holdTimer = setTimeout(() => {
+      holdInterval = setInterval(() => step(field, dir), 80);
+    }, 350);
+  };
+  const stopHold = () => {
+    btn.classList.remove('held');
+    clearTimeout(holdTimer);
+    clearInterval(holdInterval);
+  };
+
+  btn.addEventListener('mousedown',  startHold);
+  btn.addEventListener('touchstart', startHold, { passive: true });
+  btn.addEventListener('mouseup',    stopHold);
+  btn.addEventListener('mouseleave', stopHold);
+  btn.addEventListener('touchend',   stopHold);
+  btn.addEventListener('click', () => step(field, dir));
+});
+
+// ── Predict: calls Flask /predict ──
+async function predict() {
+  const btn     = document.getElementById('predict-btn');
+  const errEl   = document.getElementById('error-banner');
+  errEl.style.display = 'none';
+
+  // Build payload
+  const payload = {};
+  FEATURES.forEach(f => {
+    const el = document.getElementById('val-' + f);
+    let v = parseFloat(el.value);
+    if (isNaN(v)) v = parseFloat(el.min);
+    payload[f] = Math.min(parseFloat(el.max), Math.max(parseFloat(el.min), v));
+  });
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Identifying…';
+
+  try {
+    const res  = await fetch(API_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+
+    // Display result
+    const panel = document.getElementById('result-panel');
+    panel.style.display = 'block';
+    panel.style.animation = 'none';
+    void panel.offsetWidth;
+    panel.style.animation = '';
+
+    const nameEl = document.getElementById('result-name');
+    nameEl.className = 'result-name ' + data.species;
+    nameEl.textContent = data.species.charAt(0).toUpperCase() + data.species.slice(1);
+
+    document.getElementById('result-conf').textContent = data.confidence + '%';
+    document.getElementById('result-glow').className   = 'result-glow ' + data.species;
+
+    Object.entries(data.probabilities).forEach(([cls, prob]) => {
+      const pct = (prob * 100).toFixed(1);
+      document.getElementById('bar-' + cls).style.width = pct + '%';
+      document.getElementById('pct-' + cls).textContent = pct + '%';
+    });
+
+  } catch (err) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = `⚠ &nbsp;${err.message}. Make sure <code>app.py</code> is running.`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Identify Species';
+  }
+}
+
+function fillSample(sl, sw, pl, pw) {
+  const vals = { sepal_length:sl, sepal_width:sw, petal_length:pl, petal_width:pw };
+  FEATURES.forEach(f => {
+    document.getElementById('val-' + f).value = parseFloat(vals[f]).toFixed(1);
+  });
+}
 </script>
 </body>
 </html>'''
-
-html = html_template.format(model_json=json.dumps(model), dataset_rows=dataset_rows, bg_image_data=bg_image_data)
-
-components.html(html, height=1400, scrolling=True)
