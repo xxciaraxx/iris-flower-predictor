@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import joblib
 import base64
-
+from pathlib import Path
 # ----------------------------
 # Load Trained Model
 # ----------------------------
@@ -17,23 +17,8 @@ st.set_page_config(
     layout="centered",
 )
 
-# ----------------------------
-# Background Image Helper
-# ----------------------------
-# To use your own background image, place an image file (e.g. "bg.jpg") in
-# the same folder as this script, then uncomment the block below and remove
-# the gradient fallback line.
-#
-# with open("bg.jpg", "rb") as f:
-#     bg_data = base64.b64encode(f.read()).decode()
-# bg_css = f"url('data:image/jpeg;base64,{bg_data}')"
-#
-# ── Gradient fallback (remove when using a real image) ──────────────────────
-bg_css = "linear-gradient(160deg, #2c2a35 0%, #1a2a1e 40%, #0d1a2e 100%)"
+BG_PATH = Path("iris-bg2.jpg")
 
-# ----------------------------
-# Custom CSS
-# ----------------------------
 st.markdown(
     f"""
     <style>
@@ -41,7 +26,7 @@ st.markdown(
 
         /* ── Full-page background ── */
         .stApp {{
-            background: {bg_css};
+            background: url('{BG_PATH}') center/cover no-repeat;
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -209,10 +194,19 @@ st.markdown(
         }}
         .result-species {{
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
+            font-size: 2.6rem;
             font-weight: 400;
             font-style: italic;
             color: #f0ece4;
+            margin: 0 0 10px;
+        }}
+        .result-confidence {{
+            font-family: 'Jost', sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(240,236,228,0.72);
             margin: 0;
         }}
 
@@ -295,12 +289,15 @@ species_map = {
 if predict_btn:
     input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
     prediction = model.predict(input_data)[0]
+    probabilities = model.predict_proba(input_data)[0]
+    confidence = max(probabilities) * 100
 
     st.markdown(
         f"""
         <div class="result-box">
             <div class="result-label">Predicted Species</div>
             <p class="result-species">{species_map[prediction]}</p>
+            <p class="result-confidence">Confidence: {confidence:.1f}%</p>
         </div>
         """,
         unsafe_allow_html=True,
