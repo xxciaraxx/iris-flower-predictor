@@ -9,11 +9,13 @@ st.set_page_config(page_title="Iris Species Identifier", page_icon="iris-icon.jp
 
 model = joblib.load("iris_random_forest_model.joblib")
 bg_path = Path("iris-bg2.jpg")
+icon_path = Path("iris-icon.jpg")
 bg_css = (
     f"url('data:image/jpeg;base64,{base64.b64encode(bg_path.read_bytes()).decode()}')"
     if bg_path.exists()
     else "linear-gradient(160deg,#2c2a35 0%,#1a2a1e 40%,#0d1a2e 100%)"
 )
+icon_src = f"data:image/jpeg;base64,{base64.b64encode(icon_path.read_bytes()).decode()}" if icon_path.exists() else ""
 
 st.markdown(
     f"""
@@ -25,7 +27,7 @@ st.markdown(
         .shell{{max-width:820px;margin:0 auto;}}
         .hero{{margin-bottom:1.6rem;color:#f0ece4;}}
         .hero-top{{display:flex;align-items:center;gap:14px;margin-bottom:14px;}}
-        .hero-icon{{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:26px;background:rgba(200,184,154,.08);border:1px solid rgba(200,184,154,.18);}}
+        .hero-icon{{width:48px;height:48px;border-radius:14px;object-fit:cover;background:rgba(200,184,154,.08);border:1px solid rgba(200,184,154,.18);}}
         .hero h1{{margin:0;font:600 3rem/1.05 'Cormorant Garamond',serif;color:#f0ece4;}}
         .hero em{{color:#c8b89a;font-style:italic;}}
         .hero p{{margin:0 0 12px;color:rgba(240,236,228,.72);font-size:15px;}}
@@ -55,10 +57,10 @@ st.markdown(
 )
 
 st.markdown(
-    """
+    f"""
     <div class="shell hero">
         <div class="hero-top">
-            <div class="img src="iris-icon.jpg" class="hero-icon></div>
+            <img src="{icon_src}" class="hero-icon" alt="Iris icon">
             <h1>Identify the <em>Iris</em> Species</h1>
         </div>
         <p>Enter the measurements below.</p>
