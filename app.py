@@ -52,6 +52,12 @@ def set_sample(sample_name: str) -> None:
     st.session_state["pw"] = sample["pw"]
 
 
+def step_value(key: str, direction: int, min_value: float, max_value: float) -> None:
+    current = float(st.session_state.get(key, DEFAULT_VALUES[key]))
+    updated = round(current + (0.1 * direction), 1)
+    st.session_state[key] = min(max(updated, min_value), max_value)
+
+
 def render_measure_input(
     label: str,
     key: str,
@@ -66,18 +72,27 @@ def render_measure_input(
         """,
         unsafe_allow_html=True,
     )
-    st.number_input(
-        label,
-        min_value=min_value,
-        max_value=max_value,
-        step=0.1,
-        key=key,
-        format="%.1f",
-        label_visibility="collapsed",
-    )
+    control_cols = st.columns([0.9, 2.2, 0.9])
+    with control_cols[0]:
+        if st.form_submit_button("−", use_container_width=True):
+            step_value(key, -1, min_value, max_value)
+            st.rerun()
+    with control_cols[1]:
+        st.markdown(
+            f"""
+            <div class="measure-value-wrap">
+                <div class="measure-value">{float(st.session_state[key]):.1f}</div>
+                <div class="measure-unit">centimetres</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with control_cols[2]:
+        if st.form_submit_button("+", use_container_width=True):
+            step_value(key, 1, min_value, max_value)
+            st.rerun()
     st.markdown(
         """
-            <div class="measure-unit">centimetres</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -128,15 +143,15 @@ st.markdown(
         }}
 
         [data-testid="stMainBlockContainer"] {{
-            max-width: 960px;
-            padding-top: 2.5rem;
+            max-width: 1180px;
+            padding-top: 2.2rem;
             padding-bottom: 3rem;
         }}
 
         .hero {{
             text-align: center;
             color: #f7f1e8;
-            margin-bottom: 2.8rem;
+            margin-bottom: 2.5rem;
         }}
 
         .eyebrow {{
@@ -159,8 +174,8 @@ st.markdown(
         }}
 
         .hero h1 {{
-            font-size: clamp(3rem, 6vw, 4.8rem);
-            line-height: 0.98;
+            font-size: clamp(3.4rem, 7vw, 5.4rem);
+            line-height: 0.96;
             margin: 0 0 0.6rem 0;
             font-weight: 500;
             color: #f7f1e8;
@@ -170,7 +185,7 @@ st.markdown(
         .hero p {{
             margin-top: 0.2rem;
             color: rgba(247, 241, 232, 0.45);
-            font-size: 0.95rem;
+            font-size: 0.88rem;
         }}
 
         .panel-shell {{
@@ -216,7 +231,7 @@ st.markdown(
         .metric-grid [data-testid="column"] {{
             border-right: 1px solid rgba(200, 169, 110, 0.14);
             border-bottom: 1px solid rgba(200, 169, 110, 0.14);
-            padding: 1.6rem 1.8rem 1.75rem;
+            padding: 1.65rem 1.7rem 1.8rem;
             background: rgba(12, 22, 15, 0.72);
         }}
 
@@ -230,7 +245,7 @@ st.markdown(
         }}
 
         .measure-card {{
-            min-height: 155px;
+            min-height: 168px;
         }}
 
         .measure-label {{
@@ -241,7 +256,7 @@ st.markdown(
             text-transform: uppercase;
             letter-spacing: 0.22em;
             font-size: 0.66rem;
-            margin-bottom: 1.15rem;
+            margin-bottom: 1.4rem;
             font-weight: 600;
         }}
 
@@ -257,8 +272,21 @@ st.markdown(
             background: #c57ebf;
         }}
 
+        .measure-value-wrap {{
+            text-align: center;
+            padding-top: 0.15rem;
+        }}
+
+        .measure-value {{
+            color: #f5e7c5;
+            font-size: 2.2rem;
+            line-height: 1;
+            font-weight: 500;
+            letter-spacing: -0.03em;
+        }}
+
         .measure-unit {{
-            margin-top: 0.35rem;
+            margin-top: 0.45rem;
             color: rgba(247, 241, 232, 0.2);
             letter-spacing: 0.14em;
             text-transform: lowercase;
@@ -266,7 +294,7 @@ st.markdown(
             font-weight: 600;
         }}
 
-        .stButton > button {{
+        .sample-row .stFormSubmitButton > button {{
             border-radius: 999px;
             border: 1px solid rgba(247, 241, 232, 0.14);
             background: transparent;
@@ -277,9 +305,10 @@ st.markdown(
             font-style: italic;
             box-shadow: none;
             min-height: 0;
+            margin-top: 0;
         }}
 
-        .stButton > button:hover {{
+        .sample-row .stFormSubmitButton > button:hover {{
             border-color: rgba(200, 169, 110, 0.5);
             color: #f1dfb3;
             background: rgba(200, 169, 110, 0.08);
@@ -305,26 +334,32 @@ st.markdown(
             background: rgba(200, 169, 110, 0.08);
         }}
 
-        div[data-testid="stNumberInput"] {{
-            background: transparent;
-            border: none;
-            border-radius: 0;
+        .measure-card .stFormSubmitButton > button {{
+            width: 48px;
+            height: 48px;
+            min-height: 48px;
             padding: 0;
+            border-radius: 6px;
+            margin-top: 0.3rem;
+            color: #d7b977;
+            background: rgba(200, 169, 110, 0.08);
+            border: 1px solid rgba(200, 169, 110, 0.16);
+            font-size: 1.7rem;
+            line-height: 1;
+            letter-spacing: 0;
+            text-transform: none;
+            font-weight: 400;
         }}
 
-        div[data-testid="stNumberInput"] > div {{
-            background: transparent !important;
-            border: none !important;
+        .measure-card .stFormSubmitButton > button:hover {{
+            background: rgba(200, 169, 110, 0.16);
+            color: #f1dfb3;
+            border-color: rgba(200, 169, 110, 0.28);
         }}
 
-        div[data-testid="stNumberInput"] input {{
-            color: #f5e7c5 !important;
-            font-size: 2.05rem !important;
-            font-weight: 500 !important;
-            background: transparent !important;
-            text-align: center !important;
-            padding: 0 !important;
-            line-height: 1 !important;
+        .measure-card [data-testid="stHorizontalBlock"] {{
+            align-items: center;
+            gap: 1rem;
         }}
 
         .result-card {{
@@ -332,10 +367,10 @@ st.markdown(
             border: 1px solid rgba(200, 169, 110, 0.14);
             border-radius: 10px;
             padding: 1.8rem 2rem;
-            margin: 1.8rem auto 0;
+            margin: 2rem auto 0;
             color: #f7f1e8;
             backdrop-filter: blur(20px);
-            max-width: 940px;
+            max-width: 980px;
         }}
 
         .result-head {{
@@ -400,8 +435,39 @@ st.markdown(
             font-size: 0.88rem;
         }}
 
-        .spacer {{
-            height: 0.9rem;
+        .reference-card {{
+            max-width: 980px;
+            margin: 2rem auto 0;
+            background: rgba(8, 18, 12, 0.74);
+            border: 1px solid rgba(200, 169, 110, 0.14);
+            border-radius: 10px;
+            padding: 1.8rem 2rem;
+            color: #f7f1e8;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+            backdrop-filter: blur(20px);
+        }}
+
+        .reference-title {{
+            font-size: 1.05rem;
+            margin-bottom: 0.45rem;
+            color: #f2e5c7;
+        }}
+
+        .reference-copy {{
+            color: rgba(247, 241, 232, 0.68);
+            max-width: 430px;
+            line-height: 1.45;
+        }}
+
+        .reference-stats {{
+            color: rgba(247, 241, 232, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-size: 0.78rem;
+            white-space: nowrap;
         }}
     </style>
     """,
@@ -507,3 +573,16 @@ if pred_result:
         """,
         unsafe_allow_html=True,
     )
+
+st.markdown(
+    """
+    <div class="reference-card">
+        <div>
+            <div class="reference-title">Iris Dataset Reference</div>
+            <div class="reference-copy">Use this panel as a visual anchor for the original design. Predictions above still come directly from the trained model.</div>
+        </div>
+        <div class="reference-stats">150 Samples · 3 Species · 4 Features</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
