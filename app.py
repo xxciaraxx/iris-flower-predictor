@@ -198,14 +198,15 @@ st.markdown(
             color: #c8b89a;
             margin-bottom: 10px;
         }}
-        .result-species {{
+        .result-box .result-species {{
             font-family: 'Cormorant Garamond', serif;
-            font-size: 56px;
-            font-weight: 600;
+            font-size: 64px !important;
+            font-weight: 600 !important;
             font-style: italic;
-            color: #f0ece4;
-            line-height: 1.05;
-            margin: 6px 0 14px;
+            color: #f0ece4 !important;
+            line-height: 1.05 !important;
+            margin: 10px 0 16px !important;
+            display: block;
         }}
         .result-confidence {{
             font-family: 'Jost', sans-serif;
@@ -303,7 +304,7 @@ if predict_btn:
         f"""
         <div class="result-box">
             <div class="result-label">Predicted Species</div>
-            <p class="result-species">{species_map[prediction]}</p>
+            <p class="result-species" style="font-size:64px; line-height:1.05; margin:10px 0 16px;">{species_map[prediction]}</p>
             <p class="result-confidence">Confidence: {confidence:.1f}%</p>
         </div>
         """,
