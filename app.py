@@ -64,7 +64,7 @@ st.markdown(
             <h1>Identify the <em>Iris</em> Species</h1>
         </div>
         <p>Enter the measurements below.</p>
-        <div class="meta">Random Forest · 100 Trees · 70/30 Split</div>
+        <div class="meta">Random Forest · 100 Trees · 80/20 Split</div>
     </div>
     """,
     unsafe_allow_html=True,
